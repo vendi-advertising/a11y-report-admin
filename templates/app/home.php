@@ -1,3 +1,6 @@
 <?php
+\Vendi\Shared\template_router::get_instance()->get_header();
+?>
 
-echo 'Hi';
+<?php
+\Vendi\Shared\template_router::get_instance()->get_footer();
