@@ -1,0 +1,64 @@
+{
+    "key": "group_5b8bfad044533",
+    "title": "Site Audit Fields",
+    "fields": [
+        {
+            "key": "field_5b8bfad926e0f",
+            "label": "Domains",
+            "name": "domains",
+            "type": "repeater",
+            "instructions": "List all of the domains that should be matched for this site.",
+            "required": 1,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "collapsed": "",
+            "min": 1,
+            "max": 0,
+            "layout": "table",
+            "button_label": "Add domain",
+            "sub_fields": [
+                {
+                    "key": "field_5b8bfb1a26e10",
+                    "label": "Domain",
+                    "name": "domain",
+                    "type": "text",
+                    "instructions": "",
+                    "required": 1,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": "",
+                    "maxlength": ""
+                }
+            ]
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "post_type",
+                "operator": "==",
+                "value": "site-audit"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": 1,
+    "description": "",
+    "modified": 1535918478
+}
