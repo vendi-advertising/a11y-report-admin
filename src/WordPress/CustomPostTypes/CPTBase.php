@@ -160,7 +160,7 @@ abstract class CPTBase extends AbstractClassWithoutMagicGetSet
                 'archives'              => "$singular Archives",
                 'attributes'            => "$singular Attributes",
                 'parent_item_colon'     => "Parent $singular:",
-                'all_items'             => "All $singular",
+                'all_items'             => "All $plural",
                 'add_new_item'          => "Add New $singular",
                 'add_new'               => 'Add New',
                 'new_item'              => "New $singular",
