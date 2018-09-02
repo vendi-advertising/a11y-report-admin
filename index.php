@@ -16,6 +16,4 @@ require_once VENDI_A11Y_PLUGIN_DIR . '/includes/php-defaults.php';
 require_once VENDI_A11Y_PLUGIN_DIR . '/includes/autoload.php';
 require_once VENDI_A11Y_PLUGIN_DIR . '/includes/hooks.php';
 require_once VENDI_A11Y_PLUGIN_DIR . '/includes/routes.php';
-// require_once VENDI_A11Y_PLUGIN_DIR . '/includes/vendi-auto-asset-loader.php';
 require_once VENDI_A11Y_PLUGIN_DIR . '/includes/vendi-base.php';
-// require_once VENDI_A11Y_PLUGIN_DIR . '/includes/cli.php';
