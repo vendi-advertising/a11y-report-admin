@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Vendi\A11Y\WordPress\CustomPostTypes;
 
+use Vendi\A11Y\Exceptions\A11YException;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Message\AMQPMessage;
+
 final class URL extends CPTBase
 {
     public function __construct()
@@ -61,6 +65,44 @@ final class URL extends CPTBase
         \update_field($acf_keys['audit_state'], 'none',         $post_id);
         \update_field($acf_keys['crawl_state'], 'none',         $post_id);
 
+        self::submit_to_queue($post_id);
+
         return $post_id;
+    }
+
+    public static function get_single_by_id(int $id)
+    {
+        $obj = new self();
+
+        $args = [
+            'post_type'        => $obj->get_type_name(),
+            'p'                => $id,
+            'post_status'      => 'publish',
+        ];
+
+        $posts = \get_posts($args);
+        if(!$posts){
+            throw new A11YException(sprintf('URL by ID %1$s not found', $id));
+        }
+
+        if(1 !== count($posts)){
+            throw new A11YException(sprintf('URL by ID %1$s count not one', $id));
+        }
+
+        return reset($posts);
+    }
+
+    public static function submit_to_queue(int $url_id)
+    {
+        $url_obj = self::get_single_by_id($url_id);
+
+        $connection = new AMQPStreamConnection('localhost', 5672, 'guest', 'guest');
+        $channel = $connection->channel();
+        $channel->queue_declare('crawl2', false, true, false, false);
+        $url = get_field('url', $url_obj);
+        $msg = new AMQPMessage($url);
+        $channel->basic_publish($msg, '', $url);
+        $channel->close();
+        $connection->close();
     }
 }
