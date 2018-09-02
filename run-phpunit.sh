@@ -1,0 +1,221 @@
+#!/bin/bash
+
+##see: http://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
+# Use -gt 1 to consume two arguments per pass in the loop
+# Use -gt 0 to consume one or more arguments per pass in the loop
+
+DB_USER='unit_chris'
+DB_PASS='unit_chris'
+DB_NAME='unit_chris'
+
+CREATE_DB=false
+RUN_LINT=false
+RUN_SEC=false
+RUN_PHP_CS=false
+RUN_PHP_UNIT=false
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+
+        case $key in
+
+            -g|--group)
+                GROUP="$2"
+                shift # past argument
+            ;;
+
+            -d|--database)
+                DB_NAME="$2"
+                shift # past argument
+            ;;
+
+            -u|--user)
+                DB_USER="$2"
+                shift # past argument
+            ;;
+
+            -p|--password)
+                DB_PASS="$2"
+                shift # past argument
+            ;;
+
+            --create-database)
+                CREATE_DB=true
+            ;;
+
+            --test-only)
+                RUN_LINT=true
+                RUN_PHP_UNIT=true
+            ;;
+
+            --no-test)
+                RUN_PHP_CS=true
+                RUN_LINT=true
+            ;;
+
+            *)
+                    # unknown option
+            ;;
+        esac
+
+    shift # past argument or value
+done
+
+maybe_run_php_cs()
+{
+    echo "Maybe running PHP CS Fixer...";
+    if [ "$RUN_PHP_CS" = true ]; then
+    {
+        echo "running...";
+
+        vendor/bin/php-cs-fixer fix
+        if [ $? -ne 0 ]; then
+        {
+            echo "Error with composer... exiting";
+            exit 1;
+        }
+        fi
+    }
+    else
+        echo "skipping";
+    fi
+
+    printf "\n";
+}
+
+maybe_update_composer()
+{
+    echo "Maybe updating composer...";
+    if [ "$UPDATE_COMPOSER" = true ]; then
+    {
+        echo "running...";
+        composer update
+        if [ $? -ne 0 ]; then
+        {
+            echo "Error with composer... exiting";
+            exit 1;
+        }
+        fi
+    }
+    else
+        echo "skipping";
+    fi
+
+    printf "\n";
+}
+
+maybe_run_linter()
+{
+    echo "Maybe running linter...";
+    if [ "$RUN_LINT" = true ]; then
+    {
+        echo "running...";
+        ./vendor/bin/parallel-lint --exclude vendor/ .
+        if [ $? -ne 0 ]; then
+        {
+            echo "Error with PHP linter... exiting";
+            exit 1;
+        }
+        fi
+    }
+    else
+        echo "skipping";
+    fi
+
+    printf "\n";
+}
+
+maybe_run_security_check()
+{
+    echo "Maybe running security check...";
+    if [ "$RUN_SEC" = true ]; then
+    {
+        echo "running...";
+        vendor/bin/security-checker security:check --end-point=http://security.sensiolabs.org/check_lock --timeout=30 ./composer.lock
+        if [ $? -ne 0 ]; then
+        {
+            echo "Error with security checker... exiting";
+            exit 1;
+        }
+        fi
+    }
+    else
+        echo "skipping";
+    fi
+
+    printf "\n";
+}
+
+setup_wordpress_config()
+{
+    echo "Setting up WordPress...";
+
+    CONFIG_TEMPLATE_FILE='./vendor/WordPress/wordpress-develop/wp-tests-config-sample.php';
+    CONFIG_FILE='./vendor/WordPress/wordpress-develop/wp-tests-config.php';
+
+    if [ ! -f "$CONFIG_TEMPLATE_FILE" ]; then
+    {
+        echo "Cannot find WordPress config template... exiting";
+        exit 1;
+    }
+    fi
+
+    cp $CONFIG_TEMPLATE_FILE $CONFIG_FILE &&
+    sed -i "s|youremptytestdbnamehere|${DB_NAME}|g" $CONFIG_FILE &&
+    sed -i "s|yourusernamehere|${DB_USER}|g" $CONFIG_FILE &&
+    sed -i "s|yourpasswordhere|${DB_PASS}|g" $CONFIG_FILE
+    if [ $? -ne 0 ]; then
+    {
+        echo "Error with local test configuration... exiting";
+        exit 1;
+    }
+    fi
+
+    printf "\n";
+}
+
+maybe_create_database()
+{
+    echo "Maybe creating database...";
+    if [ "$CREATE_DB" = true ]; then
+    {
+        echo "running...";
+        mysqladmin create $DB_NAME --user="$DB_USER" --password="$DB_PASS"
+        if [ $? -ne 0 ]; then
+        {
+            echo "Error creating database... exiting";
+            exit 1;
+        }
+        fi
+    }
+    else
+        echo "skipping";
+    fi
+
+    printf "\n";
+}
+
+run_php_unit()
+{
+    echo "Running PHPUnit...";
+
+    if [ -z "$GROUP" ]; then
+        ./vendor/bin/phpunit --coverage-html ./tests/logs/coverage/
+    else
+        ./vendor/bin/phpunit --coverage-html ./tests/logs/coverage/ --group $GROUP
+    fi
+}
+
+if [ ! -d './vendor' ]; then
+    composer update
+fi
+
+maybe_update_composer;
+maybe_run_linter;
+maybe_run_php_cs;
+maybe_run_security_check;
+maybe_create_database;
+
+setup_wordpress_config;
+
+run_php_unit;
