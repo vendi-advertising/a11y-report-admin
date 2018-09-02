@@ -9,8 +9,8 @@ final class SiteAudit extends CPTBase
     public function __construct()
     {
         parent::__construct('site-audit');
-        $this->set_title_case_singular_name('SiteAudit');
-        $this->set_title_case_plural_name('SiteAudits');
+        $this->set_title_case_singular_name('Site Audit');
+        $this->set_title_case_plural_name('Site Audits');
     }
 
     public function get_register_args() : array
@@ -18,11 +18,11 @@ final class SiteAudit extends CPTBase
         return [
                 'can_export'            => true,
                 'capability_type'       => 'page',
-                'description'           => 'SiteAudit',
+                'description'           => 'Site Audits',
                 'exclude_from_search'   => true,
                 'has_archive'           => false,
                 'hierarchical'          => false,
-                'label'                 => 'SiteAudit',
+                'label'                 => 'Site Audits',
                 'labels'                => $this->_make_labels(),
                 'menu_position'         => 5,
                 'public'                => false,

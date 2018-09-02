@@ -34,7 +34,7 @@ final class URL extends CPTBase
                 'show_in_nav_menus'     => false,
                 'show_in_rest'          => false,
                 'show_ui'               => true,
-                'supports'              => [ 'title', 'revisions' ],
+                'supports'              => false,
         ];
     }
 }
