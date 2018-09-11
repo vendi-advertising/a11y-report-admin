@@ -37,4 +37,32 @@ final class Rule extends CPTBase
                 'supports'              => [ 'title', 'revisions' ],
         ];
     }
+
+    public static function create_new(int $site_audit_id, string $url)
+    {
+        $obj = new self();
+
+        $args = [
+            'post_status' => 'publish',
+            'post_type' => $obj->get_type_name(),
+        ];
+
+        $acf_keys = [
+            'url'           => 'field_5b8bfc14b6a07',
+            'audit_state'   => 'field_5b8bfca181f48',
+            'crawl_state'   => 'field_5b8bfd0a81f49',
+            'site_audit'    => 'field_5b8bfc51b6a08',
+        ];
+
+        $post_id = \wp_insert_post($args);
+
+        \update_field($acf_keys['url'],         $url,           $post_id);
+        \update_field($acf_keys['site_audit'],  $site_audit_id, $post_id);
+        \update_field($acf_keys['audit_state'], 'none',         $post_id);
+        \update_field($acf_keys['crawl_state'], 'none',         $post_id);
+
+        self::submit_to_queue($post_id);
+
+        return $post_id;
+    }
 }

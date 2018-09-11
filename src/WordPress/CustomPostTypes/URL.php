@@ -105,4 +105,80 @@ final class URL extends CPTBase
         $channel->close();
         $connection->close();
     }
+
+    public static function mark_url_as_invalid(int $url_id, string $reason){
+        \update_field('crawler_notes', $reason, $url_id);
+        \update_field('crawl_state',   'error', $url_id);
+    }
+
+    public static function get_next_for_crawler(int $crawler_id) : ?array
+    {
+        $obj = new self();
+        $idx = 0;
+        $max_idx = 5;
+
+        while($idx++ < $max_idx){
+            $args = [
+                'posts_per_page'    => 1,
+                'post_type'         => $obj->get_type_name(),
+                'orderby'           => 'date',
+                'order'             => 'ASC',
+                'post_status'       => 'publish',
+                'meta_query'        => [
+                    'relation' => 'AND',
+                        [
+                            'key'     => 'audit_state',
+                            'value'   => 'none',
+                            'compare' => '=',
+                        ],
+                        [
+                            'key'     => 'crawl_state',
+                            'value'   => 'none',
+                            'compare' => '=',
+                        ],
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key'     => 'crawler_id',
+                                'value'   => '',
+                                'compare' => '=',
+                            ],
+                            [
+                                'key'     => 'crawler_id',
+                                'compare' => 'NOT EXISTS',
+                            ],
+                        ]
+                ],
+            ];
+
+            $posts = \get_posts($args);
+
+            if(!$posts){
+                return null;
+            }
+
+            if(0 === count($posts)){
+                return null;
+            }
+
+            $post = reset($posts);
+            $url = \get_field('url', $post);
+
+            if($url !== filter_var($url, FILTER_VALIDATE_URL, FILTER_FLAG_HOST_REQUIRED)){
+                self::mark_url_as_invalid($post->ID, 'URL did not pass through filter_var cleanly' );
+                continue;
+            }
+
+            \update_field('crawler_id',                 $crawler_id, $post->ID);
+            \update_field('crawl_state',                'pending',   $post->ID);
+            \update_field('crawler_check-out_timestamp', time(),     $post->ID);
+
+            return [
+                'url' => $url,
+                'url-id' => $post->ID,
+            ];
+        }
+
+        return null;
+    }
 }
